@@ -115,7 +115,7 @@
 
 - (void)startPlaying
 {
-    [self.timer fire];
+    self.timer = [NSTimer scheduledTimerWithTimeInterval:PAGE_MOVING_TIME_INTERVAL target:self selector:@selector(moveToNextPage) userInfo:nil repeats:YES];
 }
 
 - (void)stopPlaying
@@ -163,18 +163,14 @@
 
 - (void)scrollViewDidEndDragging:(UIScrollView *)scrollView willDecelerate:(BOOL)decelerate
 {
-    NSInteger currentPage = floorf(self.imageScrollView.contentOffset.x / self.imageScrollView.frame.size.width + 0.5);
     
-    __weak typeof(self) weakSelf = self;
-    [UIView animateWithDuration:0.3 animations:^{
-        [weakSelf.imageScrollView setContentOffset:CGPointMake(self.imageScrollView.frame.size.width * currentPage, 0)];
-    } completion:^(BOOL finished) {
-        if (finished) {
-            [weakSelf adjustPageIndicatorAndContentOffset];
-        }
-        
-        [weakSelf performSelector:@selector(startPlaying) withObject:nil afterDelay:PAGE_MOVING_TIME_INTERVAL];
-    }];
+}
+
+- (void)scrollViewDidEndDecelerating:(UIScrollView *)scrollView
+{
+    [self adjustPageIndicatorAndContentOffset];
+    
+    [self startPlaying];
 }
 
 #pragma mark - custom getter
@@ -252,15 +248,6 @@
     }
     
     return _pageControl;
-}
-
-- (NSTimer *)timer
-{
-    if (!_timer) {
-        _timer = [NSTimer scheduledTimerWithTimeInterval:PAGE_MOVING_TIME_INTERVAL target:self selector:@selector(moveToNextPage) userInfo:nil repeats:YES];
-    }
-    
-    return _timer;
 }
 
 - (void)dealloc
